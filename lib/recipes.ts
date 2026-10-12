@@ -11,8 +11,6 @@ export const PHOTO_PRESETS = [
 
 export type PhotoPreset = (typeof PHOTO_PRESETS)[number];
 
-export const FEATURED_RECIPE_ID = "sunday-brisket";
-
 export const GOOGLE_ACCOUNT = "maya@sundaybox.kitchen";
 
 const LIMITS = {

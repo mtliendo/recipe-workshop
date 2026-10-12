@@ -3,15 +3,22 @@
 import Link from "next/link";
 import { ButtonLink } from "@/components/button";
 import { Plate } from "@/components/plate";
-import { OpeningCard } from "@/components/status";
-import { FEATURED_RECIPE_ID } from "@/lib/recipes";
+import { SignInPrompt } from "@/components/status";
 import { useBox } from "@/lib/store";
+import type { Recipe } from "@/lib/types";
 
-export function HomeView() {
-  const { recipes, ready, error } = useBox();
-  const featured = recipes.find((recipe) => recipe.id === FEATURED_RECIPE_ID) ?? recipes[0];
-
-  if (!ready) return <OpeningCard />;
+export function HomeView({
+  initialRecipes,
+  initialSignedIn,
+}: {
+  initialRecipes: Recipe[];
+  initialSignedIn: boolean;
+}) {
+  const box = useBox();
+  const signedIn = box.ready ? box.signedIn : initialSignedIn;
+  const recipes = box.ready ? box.recipes : initialRecipes;
+  const { error } = box;
+  const featured = recipes[0];
 
   if (error) {
     return (
@@ -22,6 +29,17 @@ export function HomeView() {
       </section>
     );
   }
+
+  if (!signedIn) {
+    return (
+      <SignInPrompt
+        returnTo="/"
+        title="Your cards stay with you."
+        body="Sign in to open the box. The cards you write belong to this sign-in."
+      />
+    );
+  }
+
   const rest = featured ? recipes.filter((recipe) => recipe.id !== featured.id) : [];
 
   if (!featured) {
@@ -31,14 +49,9 @@ export function HomeView() {
           The family box
         </p>
         <h1 className="mt-3 font-display text-6xl leading-none">The box is empty.</h1>
-        <p className="mt-4 text-lg text-ink-soft">
-          Write a new card, or put Grandma’s three back from Settings.
-        </p>
-        <div className="mt-8 flex flex-wrap gap-3">
+        <p className="mt-4 text-lg text-ink-soft">Write the first card. It stays with this sign-in.</p>
+        <div className="mt-8">
           <ButtonLink href="/recipes/new">Write a card</ButtonLink>
-          <ButtonLink href="/settings" tone="quiet">
-            Settings
-          </ButtonLink>
         </div>
       </section>
     );
@@ -55,14 +68,13 @@ export function HomeView() {
             className="rise mt-4 max-w-xl font-display text-6xl leading-[0.92] font-light tracking-tight sm:text-7xl"
             style={{ animationDelay: "70ms" }}
           >
-            Grandma’s cards are still here.
+            Your cards are in the box.
           </h1>
           <p
             className="rise mt-5 max-w-md text-lg leading-relaxed text-ink-soft"
             style={{ animationDelay: "140ms" }}
           >
-            Sunday brisket, the skillet cornbread, and peach cobbler from August. Open one, or write
-            the next card in your own hand.
+            Open one, or write the next card in your own hand.
           </p>
           <div className="rise mt-8 flex flex-wrap gap-3" style={{ animationDelay: "210ms" }}>
             <ButtonLink href={`/recipes/${featured.id}`}>Open this card</ButtonLink>

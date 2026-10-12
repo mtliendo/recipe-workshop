@@ -1,35 +1,31 @@
 "use client";
 
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Button, ButtonLink } from "@/components/button";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { DevelopPlate } from "@/components/develop-plate";
-import { OpeningCard, MissingCard } from "@/components/status";
 import { deleteRecipe, saveRecipe, useBox } from "@/lib/store";
+import type { Recipe } from "@/lib/types";
 
-export function RecipeDetail() {
-  const params = useParams<{ id: string }>();
-  const id = typeof params.id === "string" ? params.id : "";
+export function RecipeDetail({ initialRecipe, index }: { initialRecipe: Recipe; index: number }) {
   const router = useRouter();
-  const { recipes, ready } = useBox();
-  const recipe = recipes.find((item) => item.id === id);
+  const { recipes } = useBox();
+  const recipe = recipes.find((item) => item.id === initialRecipe.id) ?? initialRecipe;
+  const cardIndex = recipes.some((item) => item.id === recipe.id)
+    ? recipes.findIndex((item) => item.id === recipe.id)
+    : index;
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [photoError, setPhotoError] = useState("");
 
   useEffect(() => {
-    if (!recipe) return;
     const previous = document.title;
     document.title = `${recipe.title} · Sunday Box`;
     return () => {
       document.title = previous;
     };
-  }, [recipe]);
-
-  if (!recipe) return ready ? <MissingCard /> : <OpeningCard />;
-
-  const index = recipes.findIndex((item) => item.id === recipe.id);
+  }, [recipe.title]);
 
   return (
     <article className="grid items-start gap-10 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
@@ -45,7 +41,7 @@ export function RecipeDetail() {
       </div>
       <div>
         <p className="font-display text-[0.68rem] uppercase tracking-[0.22em] text-ink-soft">
-          Card {String(index + 1).padStart(2, "0")}
+          Card {String(cardIndex + 1).padStart(2, "0")}
         </p>
         <h1 className="mt-3 font-display text-5xl leading-none sm:text-6xl">{recipe.title}</h1>
         {recipe.note ? <p className="mt-4 max-w-xl text-lg italic text-ink-soft">{recipe.note}</p> : null}
@@ -103,7 +99,7 @@ export function RecipeDetail() {
       {confirmingDelete ? (
         <ConfirmDialog
           title="Take this card out?"
-          body={`“${recipe.title}” leaves the box. Grandma’s three cards can be put back from Settings.`}
+          body={`“${recipe.title}” leaves the box.`}
           confirmLabel="Take it out"
           cancelLabel="Keep the card"
           onCancel={() => setConfirmingDelete(false)}

@@ -4,14 +4,14 @@ Maya’s family recipe box. Cloning the repo is the start. This checkpoint is th
 
 ## What is working
 
-The homepage reads Grandma’s three cards from Neon. Anyone can open a card. **Sign up** and **Sign in** in the header go through Auth0, and **Sign out** ends the session.
+The box starts empty. **Sign up** and **Sign in** in the header go through Auth0, and **Sign out** ends the session. Each recipe is stored with that person’s Auth0 id, and the box only returns their cards.
 
 These stay behind login:
 
 - Write a card, and revise or remove one
 - Save a picture to Vercel Blob, or **Photograph it** with the AI Gateway
 - The kitchen chat
-- Settings, including putting Grandma’s three cards back
+- Settings
 
 Google Calendar in Settings is still only a mark on the page.
 
@@ -39,7 +39,7 @@ When the app is deployed, add that origin’s `/auth/callback` and logout URL as
 
 ### Neon
 
-Create a project and copy the pooled connection string into `DATABASE_URL`. Apply `db/schema.sql` with the direct (non-pooler) string. That file creates the recipe table and Grandma’s three cards.
+Create a project and copy the pooled connection string into `DATABASE_URL`. Apply `db/schema.sql` with the direct (non-pooler) string. That file creates the recipe table with a required `owner` column and removes the old shared starter cards.
 
 ### Vercel
 
@@ -55,8 +55,9 @@ Set the same variables on the Vercel project before you deploy.
 
 With the dev server running, or on the deployed URL:
 
-1. The box shows Sunday Brisket, Cast-iron Cornbread, and August Peach Cobbler.
-2. Sign up or sign in, then come back to the box.
-3. Open the kitchen and send a note. It should answer.
-4. Open a card and use **Photograph it**, or choose a picture. The plate should keep that photo.
-5. Sign out. The kitchen should ask you to sign in again.
+1. Signed out, the homepage asks you to sign in. The brisket, cornbread, and cobbler cards are gone.
+2. Sign up or sign in. The box is empty until you write a card.
+3. Write a card. It shows on the homepage for this sign-in.
+4. Sign out. The card leaves the page. Sign in again and it is back.
+5. Open the kitchen and send a note. It should answer.
+6. On a card, use **Photograph it**, or choose a picture. The plate should keep that photo.

@@ -294,7 +294,7 @@ export function RecipeForm({
       {confirmingDelete && initial ? (
         <ConfirmDialog
           title="Take this card out?"
-          body={`“${initial.title}” leaves the box. Grandma’s three cards can be put back from Settings.`}
+          body={`“${initial.title}” leaves the box.`}
           confirmLabel="Take it out"
           cancelLabel="Keep the card"
           onCancel={() => setConfirmingDelete(false)}

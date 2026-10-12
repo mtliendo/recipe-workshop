@@ -4,9 +4,9 @@ import { useState } from "react";
 import { Button } from "@/components/button";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { GOOGLE_ACCOUNT } from "@/lib/recipes";
-import { resetBox, setGoogleConnected, useBox } from "@/lib/store";
+import { setGoogleConnected, useBox } from "@/lib/store";
 
-type Pending = "connect" | "disconnect" | "reset" | null;
+type Pending = "connect" | "disconnect" | null;
 
 export function SettingsView() {
   const { settings } = useBox();
@@ -53,19 +53,6 @@ export function SettingsView() {
         </div>
       </section>
 
-      <section className="mt-8 border-t border-rule pt-8">
-        <h2 className="font-display text-3xl">Grandma’s cards</h2>
-        <p className="mt-2 max-w-md text-ink-soft">
-          Put the brisket, cornbread, and cobbler back. This also clears the kitchen chat and the
-          Google mark.
-        </p>
-        <div className="mt-5">
-          <Button type="button" tone="quiet" onClick={() => setPending("reset")}>
-            Restore the original box
-          </Button>
-        </div>
-      </section>
-
       {pending === "connect" ? (
         <ConfirmDialog
           title="Connect Google?"
@@ -90,18 +77,6 @@ export function SettingsView() {
           onConfirm={() => {
             setGoogleConnected(false);
             setPending(null);
-          }}
-        />
-      ) : null}
-      {pending === "reset" ? (
-        <ConfirmDialog
-          title="Put Grandma’s cards back?"
-          body="The box returns to the three original cards, and the Google mark is cleared."
-          confirmLabel="Restore the box"
-          cancelLabel="Leave it"
-          onCancel={() => setPending(null)}
-          onConfirm={() => {
-            void resetBox().then(() => setPending(null));
           }}
         />
       ) : null}

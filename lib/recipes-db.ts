@@ -1,6 +1,5 @@
 import { getPool } from "@/lib/db";
 import { cleanRecipe, PHOTO_PRESETS, type PhotoPreset } from "@/lib/recipes";
-import { SEED_RECIPES } from "@/lib/seed";
 import type { Ingredient, Recipe } from "@/lib/types";
 
 type RecipeRow = {
@@ -13,6 +12,10 @@ type RecipeRow = {
   steps: string[];
   photo: string;
 };
+
+function assertOwner(owner: string) {
+  if (!owner) throw new Error("Recipe operations require an owner.");
+}
 
 function isPreset(photo: string): photo is PhotoPreset {
   return PHOTO_PRESETS.includes(photo as PhotoPreset);
@@ -63,23 +66,29 @@ export function parseRecipe(value: unknown): Recipe | null {
   return cleaned;
 }
 
-export async function listRecipes() {
+const RECIPE_COLUMNS = `id, title, note, servings, "time", ingredients, steps, photo`;
+
+export async function listRecipes(owner: string) {
+  assertOwner(owner);
   const pool = await getPool();
   const result = await pool.query<RecipeRow>(
-    `select id, title, note, servings, "time", ingredients, steps, photo
+    `select ${RECIPE_COLUMNS}
      from recipes
+     where owner = $1
      order by position asc, updated_at desc`,
+    [owner],
   );
   return result.rows.map(rowToRecipe);
 }
 
-export async function saveRecipeRecord(recipe: Recipe) {
+export async function saveRecipeRecord(recipe: Recipe, owner: string) {
+  assertOwner(owner);
   const pool = await getPool();
   const result = await pool.query<RecipeRow>(
-    `insert into recipes (id, title, note, servings, "time", ingredients, steps, photo, position)
+    `insert into recipes (id, owner, title, note, servings, "time", ingredients, steps, photo, position)
      values (
-       $1, $2, $3, $4, $5, $6::jsonb, $7::jsonb, $8,
-       coalesce((select min(position) from recipes), 1) - 1
+       $1, $2, $3, $4, $5, $6, $7::jsonb, $8::jsonb, $9,
+       coalesce((select min(position) from recipes where owner = $2), 1) - 1
      )
      on conflict (id) do update set
        title = excluded.title,
@@ -90,9 +99,11 @@ export async function saveRecipeRecord(recipe: Recipe) {
        steps = excluded.steps,
        photo = excluded.photo,
        updated_at = now()
-     returning id, title, note, servings, "time", ingredients, steps, photo`,
+     where recipes.owner = excluded.owner
+     returning ${RECIPE_COLUMNS}`,
     [
       recipe.id,
+      owner,
       recipe.title,
       recipe.note,
       recipe.servings,
@@ -102,44 +113,13 @@ export async function saveRecipeRecord(recipe: Recipe) {
       recipe.photo,
     ],
   );
-  return rowToRecipe(result.rows[0]);
+  const row = result.rows[0];
+  return row ? rowToRecipe(row) : null;
 }
 
-export async function deleteRecipeRecord(id: string) {
+export async function deleteRecipeRecord(id: string, owner: string) {
+  assertOwner(owner);
   const pool = await getPool();
-  const result = await pool.query("delete from recipes where id = $1", [id]);
+  const result = await pool.query("delete from recipes where id = $1 and owner = $2", [id, owner]);
   return (result.rowCount ?? 0) > 0;
-}
-
-export async function restoreSeedRecipes() {
-  const pool = await getPool();
-  const client = await pool.connect();
-  try {
-    await client.query("begin");
-    await client.query("delete from recipes");
-    for (const [index, recipe] of SEED_RECIPES.entries()) {
-      await client.query(
-        `insert into recipes (id, title, note, servings, "time", ingredients, steps, photo, position)
-         values ($1, $2, $3, $4, $5, $6::jsonb, $7::jsonb, $8, $9)`,
-        [
-          recipe.id,
-          recipe.title,
-          recipe.note,
-          recipe.servings,
-          recipe.time,
-          JSON.stringify(recipe.ingredients),
-          JSON.stringify(recipe.steps),
-          recipe.photo,
-          index,
-        ],
-      );
-    }
-    await client.query("commit");
-  } catch (error) {
-    await client.query("rollback");
-    throw error;
-  } finally {
-    client.release();
-  }
-  return listRecipes();
 }

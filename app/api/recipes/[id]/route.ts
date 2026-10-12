@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
 import { deleteRecipeRecord, parseRecipe, saveRecipeRecord } from "@/lib/recipes-db";
-import { requireUser } from "@/lib/session";
+import { currentOwner } from "@/lib/session";
 
 export async function PUT(request: Request, context: { params: Promise<{ id: string }> }) {
-  const denied = await requireUser();
-  if (denied) return denied;
+  const owner = await currentOwner();
+  if (!owner) {
+    return NextResponse.json({ error: "Sign in to change the box." }, { status: 401 });
+  }
 
   const { id } = await context.params;
   const recipe = parseRecipe(await request.json().catch(() => null));
@@ -13,20 +15,24 @@ export async function PUT(request: Request, context: { params: Promise<{ id: str
   }
 
   try {
-    return NextResponse.json(await saveRecipeRecord(recipe));
+    const saved = await saveRecipeRecord(recipe, owner);
+    if (!saved) return NextResponse.json({ error: "That card isn't in your box." }, { status: 404 });
+    return NextResponse.json(saved);
   } catch {
     return NextResponse.json({ error: "The card couldn't be saved." }, { status: 500 });
   }
 }
 
 export async function DELETE(_request: Request, context: { params: Promise<{ id: string }> }) {
-  const denied = await requireUser();
-  if (denied) return denied;
+  const owner = await currentOwner();
+  if (!owner) {
+    return NextResponse.json({ error: "Sign in to change the box." }, { status: 401 });
+  }
 
   const { id } = await context.params;
   try {
-    const removed = await deleteRecipeRecord(id);
-    if (!removed) return NextResponse.json({ error: "That card is already gone." }, { status: 404 });
+    const removed = await deleteRecipeRecord(id, owner);
+    if (!removed) return NextResponse.json({ error: "That card isn't in your box." }, { status: 404 });
     return NextResponse.json({ ok: true });
   } catch {
     return NextResponse.json({ error: "The card couldn't be taken out." }, { status: 500 });

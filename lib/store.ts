@@ -11,6 +11,7 @@ type Box = {
   recipes: Recipe[];
   settings: Settings;
   ready: boolean;
+  signedIn: boolean;
   error: string;
 };
 
@@ -18,6 +19,7 @@ const serverBox: Box = {
   recipes: [],
   settings: DEFAULT_SETTINGS,
   ready: false,
+  signedIn: false,
   error: "",
 };
 
@@ -60,13 +62,22 @@ async function readError(response: Response, fallback: string) {
 }
 
 export async function refreshRecipes() {
-  const response = await fetch("/api/recipes");
+  let response: Response;
+  try {
+    response = await fetch("/api/recipes");
+  } catch {
+    return;
+  }
+  if (response.status === 401) {
+    commit({ ...box, recipes: [], ready: true, signedIn: false, error: "" });
+    return;
+  }
   if (!response.ok) {
     commit({ ...box, ready: true, error: await readError(response, "The box couldn't be opened.") });
     return;
   }
   const recipes = (await response.json()) as Recipe[];
-  commit({ ...box, recipes, ready: true, error: "" });
+  commit({ ...box, recipes, ready: true, signedIn: true, error: "" });
 }
 
 function start() {
@@ -115,14 +126,4 @@ export function setGoogleConnected(googleConnected: boolean) {
   writeSettings(settings);
   commit({ ...box, settings });
   return true;
-}
-
-export async function resetBox() {
-  const response = await fetch("/api/recipes/restore", { method: "POST" });
-  if (!response.ok) return readError(response, "Grandma’s cards couldn't be put back.");
-  const recipes = (await response.json()) as Recipe[];
-  const settings = DEFAULT_SETTINGS;
-  writeSettings(settings);
-  commit({ recipes, settings, ready: true, error: "" });
-  return null;
 }
