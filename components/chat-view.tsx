@@ -1,22 +1,25 @@
 "use client";
 
+import { useChat } from "@ai-sdk/react";
+import { DefaultChatTransport } from "ai";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/button";
-import { ASSISTANT_REPLY } from "@/lib/recipes";
-import { sendChat, useBox } from "@/lib/store";
 
 export function ChatView() {
-  const { messages } = useBox();
+  const [transport] = useState(() => new DefaultChatTransport({ api: "/api/chat" }));
+  const { messages, sendMessage, status, error } = useChat({ transport });
   const [draft, setDraft] = useState("");
   const endRef = useRef<HTMLDivElement>(null);
+  const busy = status === "submitted" || status === "streaming";
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ block: "end" });
-  }, [messages.length]);
+  }, [messages, busy]);
 
   function submit() {
-    if (!draft.trim()) return;
-    sendChat(draft, ASSISTANT_REPLY);
+    const text = draft.trim();
+    if (!text || busy) return;
+    void sendMessage({ text });
     setDraft("");
   }
 
@@ -25,7 +28,7 @@ export function ChatView() {
       <p className="font-display text-[0.68rem] uppercase tracking-[0.22em] text-paprika">Kitchen</p>
       <h1 className="mt-3 font-display text-5xl leading-none sm:text-6xl">Ask for a card.</h1>
       <p className="mt-4 max-w-lg text-ink-soft">
-        Describe a recipe and the kitchen will answer. It isn’t ready to write one yet.
+        Describe a dish. The kitchen will answer.
       </p>
 
       <div className="mt-8 flex-1 space-y-6" aria-live="polite">
@@ -40,18 +43,28 @@ export function ChatView() {
                 <p className="font-display text-[0.68rem] uppercase tracking-[0.18em] text-ink-soft">
                   You
                 </p>
-                <p className="mt-1 whitespace-pre-wrap">{message.text}</p>
+                <p className="mt-1 whitespace-pre-wrap">
+                  {message.parts.map((part, index) =>
+                    part.type === "text" ? <span key={index}>{part.text}</span> : null,
+                  )}
+                </p>
               </div>
             ) : (
               <div key={message.id} className="max-w-[36rem]">
                 <p className="font-display text-[0.68rem] uppercase tracking-[0.18em] text-olive">
                   Kitchen
                 </p>
-                <p className="mt-1 font-display text-2xl italic text-olive">{message.text}</p>
+                <p className="mt-1 whitespace-pre-wrap text-lg text-olive">
+                  {message.parts.map((part, index) =>
+                    part.type === "text" ? <span key={index}>{part.text}</span> : null,
+                  )}
+                </p>
               </div>
             ),
           )
         )}
+        {busy ? <p className="font-display text-xl italic text-ink-soft">The kitchen is thinking…</p> : null}
+        {error ? <p className="text-sm text-paprika">{error.message}</p> : null}
         <div ref={endRef} />
       </div>
 
@@ -81,7 +94,7 @@ export function ChatView() {
         />
         <div className="mt-2 flex items-center justify-between gap-4">
           <p className="text-sm text-ink-soft">Enter sends. Shift + Enter keeps the line.</p>
-          <Button type="submit" disabled={!draft.trim()}>
+          <Button type="submit" disabled={!draft.trim() || busy}>
             Send
           </Button>
         </div>

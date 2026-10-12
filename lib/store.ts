@@ -1,90 +1,48 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
-import { SEED_RECIPES } from "@/lib/seed";
-import type { ChatMessage, Recipe, Settings } from "@/lib/types";
+import { useEffect, useSyncExternalStore } from "react";
+import type { Recipe, Settings } from "@/lib/types";
 
-const RECIPES_KEY = "sunday-box:recipes:v1";
 const SETTINGS_KEY = "sunday-box:settings:v1";
-const CHAT_KEY = "sunday-box:chat:v1";
 
 const DEFAULT_SETTINGS: Settings = { googleConnected: false };
 
 type Box = {
   recipes: Recipe[];
   settings: Settings;
-  messages: ChatMessage[];
   ready: boolean;
+  error: string;
 };
 
 const serverBox: Box = {
-  recipes: SEED_RECIPES,
+  recipes: [],
   settings: DEFAULT_SETTINGS,
-  messages: [],
   ready: false,
+  error: "",
 };
 
-const freshBox: Box = { ...serverBox, ready: true };
-
-let box: Box | null = null;
+let box: Box = serverBox;
 const listeners = new Set<() => void>();
+let started = false;
 
-function readJson(key: string): unknown {
+function readSettings(): Settings {
   try {
-    const raw = localStorage.getItem(key);
-    if (!raw) return null;
-    return JSON.parse(raw) as unknown;
+    const raw = localStorage.getItem(SETTINGS_KEY);
+    if (!raw) return DEFAULT_SETTINGS;
+    const value = JSON.parse(raw) as Partial<Settings>;
+    return { googleConnected: value.googleConnected === true };
   } catch {
-    return null;
+    return DEFAULT_SETTINGS;
   }
 }
 
-function writeJson(key: string, value: unknown) {
-  try {
-    localStorage.setItem(key, JSON.stringify(value));
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-function isSettings(value: unknown): value is Settings {
-  return (
-    typeof value === "object" &&
-    value !== null &&
-    "googleConnected" in value &&
-    typeof value.googleConnected === "boolean"
-  );
-}
-
-function loadBox(): Box {
-  const recipes = readJson(RECIPES_KEY);
-  const settings = readJson(SETTINGS_KEY);
-  const messages = readJson(CHAT_KEY);
-  if (recipes === null && settings === null && messages === null) return freshBox;
-  return {
-    recipes: Array.isArray(recipes) ? (recipes as Recipe[]) : SEED_RECIPES,
-    settings: isSettings(settings) ? settings : DEFAULT_SETTINGS,
-    messages: Array.isArray(messages) ? (messages as ChatMessage[]) : [],
-    ready: true,
-  };
-}
-
-function snapshot() {
-  if (typeof window === "undefined") return serverBox;
-  if (!box) box = loadBox();
-  return box;
+function writeSettings(settings: Settings) {
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
 }
 
 function commit(next: Box) {
-  const saved =
-    writeJson(RECIPES_KEY, next.recipes) &&
-    writeJson(SETTINGS_KEY, next.settings) &&
-    writeJson(CHAT_KEY, next.messages);
-  if (!saved) return false;
   box = next;
   listeners.forEach((listener) => listener());
-  return true;
 }
 
 function subscribe(listener: () => void) {
@@ -92,54 +50,79 @@ function subscribe(listener: () => void) {
   return () => listeners.delete(listener);
 }
 
+function snapshot() {
+  return box;
+}
+
+async function readError(response: Response, fallback: string) {
+  const payload = (await response.json().catch(() => null)) as { error?: unknown } | null;
+  return typeof payload?.error === "string" ? payload.error : fallback;
+}
+
+export async function refreshRecipes() {
+  const response = await fetch("/api/recipes");
+  if (!response.ok) {
+    commit({ ...box, ready: true, error: await readError(response, "The box couldn't be opened.") });
+    return;
+  }
+  const recipes = (await response.json()) as Recipe[];
+  commit({ ...box, recipes, ready: true, error: "" });
+}
+
+function start() {
+  if (started) return;
+  started = true;
+  commit({ ...box, settings: readSettings() });
+  void refreshRecipes();
+}
+
 export function useBox() {
-  return useSyncExternalStore(subscribe, snapshot, () => serverBox);
+  const value = useSyncExternalStore(subscribe, snapshot, () => serverBox);
+  useEffect(start, []);
+  return value;
 }
 
-export function saveRecipe(recipe: Recipe) {
-  const current = snapshot();
-  const exists = current.recipes.some((item) => item.id === recipe.id);
-  const recipes = exists
-    ? current.recipes.map((item) => (item.id === recipe.id ? recipe : item))
-    : [recipe, ...current.recipes];
-  return commit({ ...current, recipes, ready: true });
-}
-
-export function deleteRecipe(id: string) {
-  const current = snapshot();
-  return commit({
-    ...current,
-    recipes: current.recipes.filter((item) => item.id !== id),
-    ready: true,
+export async function saveRecipe(recipe: Recipe) {
+  const response = await fetch(`/api/recipes/${recipe.id}`, {
+    method: "PUT",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(recipe),
   });
+  if (!response.ok) return readError(response, "The card couldn't be saved.");
+  const saved = (await response.json()) as Recipe;
+  const exists = box.recipes.some((item) => item.id === saved.id);
+  const recipes = exists
+    ? box.recipes.map((item) => (item.id === saved.id ? saved : item))
+    : [saved, ...box.recipes];
+  commit({ ...box, recipes, ready: true, error: "" });
+  return null;
+}
+
+export async function deleteRecipe(id: string) {
+  const response = await fetch(`/api/recipes/${id}`, { method: "DELETE" });
+  if (!response.ok) return readError(response, "The card couldn't be taken out.");
+  commit({
+    ...box,
+    recipes: box.recipes.filter((item) => item.id !== id),
+    ready: true,
+    error: "",
+  });
+  return null;
 }
 
 export function setGoogleConnected(googleConnected: boolean) {
-  const current = snapshot();
-  return commit({
-    ...current,
-    settings: { googleConnected },
-    ready: true,
-  });
+  const settings = { googleConnected };
+  writeSettings(settings);
+  commit({ ...box, settings });
+  return true;
 }
 
-export function sendChat(text: string, reply: string) {
-  const trimmed = text.trim();
-  if (!trimmed) return false;
-  const current = snapshot();
-  const messages = [
-    ...current.messages,
-    { id: crypto.randomUUID(), role: "user" as const, text: trimmed },
-    { id: crypto.randomUUID(), role: "assistant" as const, text: reply },
-  ].slice(-40);
-  return commit({ ...current, messages, ready: true });
-}
-
-export function resetBox() {
-  return commit({
-    recipes: SEED_RECIPES,
-    settings: DEFAULT_SETTINGS,
-    messages: [],
-    ready: true,
-  });
+export async function resetBox() {
+  const response = await fetch("/api/recipes/restore", { method: "POST" });
+  if (!response.ok) return readError(response, "Grandma’s cards couldn't be put back.");
+  const recipes = (await response.json()) as Recipe[];
+  const settings = DEFAULT_SETTINGS;
+  writeSettings(settings);
+  commit({ recipes, settings, ready: true, error: "" });
+  return null;
 }

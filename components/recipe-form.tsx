@@ -45,14 +45,15 @@ export function RecipeForm({
     }));
   }
 
-  function save() {
+  async function save() {
     const recipe = cleanRecipe(draft);
     if (!recipe.title) {
       setError("A card needs a title.");
       return;
     }
-    if (!saveRecipe(recipe)) {
-      setError("This browser couldn't hold the card. Try a smaller picture.");
+    const message = await saveRecipe(recipe);
+    if (message) {
+      setError(message);
       return;
     }
     router.push(`/recipes/${recipe.id}`);
@@ -64,7 +65,7 @@ export function RecipeForm({
         className="max-w-xl"
         onSubmit={(event) => {
           event.preventDefault();
-          save();
+          void save();
         }}
       >
         <p className="font-display text-[0.68rem] uppercase tracking-[0.22em] text-ink-soft">
@@ -75,6 +76,7 @@ export function RecipeForm({
         <div className="mt-8 lg:hidden">
           <DevelopPlate
             photo={draft.photo}
+            subject={`${draft.title} ${draft.note}`}
             onPhoto={(photo) => setDraft((current) => ({ ...current, photo }))}
           />
         </div>
@@ -256,6 +258,7 @@ export function RecipeForm({
       <aside className="sticky top-6 hidden border border-ink/10 bg-foam p-5 lg:block">
         <DevelopPlate
           photo={draft.photo}
+          subject={`${draft.title} ${draft.note}`}
           onPhoto={(photo) => setDraft((current) => ({ ...current, photo }))}
         />
         <h2 className="mt-4 font-display text-4xl leading-none">
@@ -296,8 +299,14 @@ export function RecipeForm({
           cancelLabel="Keep the card"
           onCancel={() => setConfirmingDelete(false)}
           onConfirm={() => {
-            deleteRecipe(initial.id);
-            router.push("/");
+            void deleteRecipe(initial.id).then((message) => {
+              if (message) {
+                setError(message);
+                setConfirmingDelete(false);
+                return;
+              }
+              router.push("/");
+            });
           }}
         />
       ) : null}

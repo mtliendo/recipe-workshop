@@ -148,7 +148,11 @@ function PhotoPlate({ src }: { src: string }) {
 export function Plate({ photo, className = "" }: { photo: string; className?: string }) {
   return (
     <div className={`aspect-[6/5] ${className}`}>
-      {photo.startsWith("data:") ? <PhotoPlate src={photo} /> : <Preset photo={photo} />}
+      {photo.startsWith("data:") || photo.startsWith("https://") || photo.startsWith("http://") ? (
+        <PhotoPlate src={photo} />
+      ) : (
+        <Preset photo={photo} />
+      )}
     </div>
   );
 }

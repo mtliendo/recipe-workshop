@@ -36,9 +36,9 @@ export function RecipeDetail() {
       <div>
         <DevelopPlate
           photo={recipe.photo}
+          subject={`${recipe.title}. ${recipe.note}`}
           onPhoto={(photo) => {
-            const saved = saveRecipe({ ...recipe, photo });
-            setPhotoError(saved ? "" : "This browser couldn't hold that photo.");
+            void saveRecipe({ ...recipe, photo }).then((message) => setPhotoError(message ?? ""));
           }}
         />
         {photoError ? <p className="mt-3 text-center text-sm text-paprika">{photoError}</p> : null}
@@ -108,8 +108,14 @@ export function RecipeDetail() {
           cancelLabel="Keep the card"
           onCancel={() => setConfirmingDelete(false)}
           onConfirm={() => {
-            deleteRecipe(recipe.id);
-            router.push("/");
+            void deleteRecipe(recipe.id).then((message) => {
+              if (message) {
+                setPhotoError(message);
+                setConfirmingDelete(false);
+                return;
+              }
+              router.push("/");
+            });
           }}
         />
       ) : null}

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Suspense, type ReactNode } from "react";
 import { KitchenNav, KitchenNavFallback } from "@/components/kitchen-nav";
+import { SessionLinks } from "@/components/session-links";
 
 export function Shell({ children }: { children: ReactNode }) {
   return (
@@ -18,9 +19,14 @@ export function Shell({ children }: { children: ReactNode }) {
               <span className="font-display text-4xl italic tracking-tight">Sunday</span>
               <span className="ml-2 font-display text-xs uppercase tracking-[0.32em]">Box</span>
             </Link>
-            <Suspense fallback={<KitchenNavFallback />}>
-              <KitchenNav />
-            </Suspense>
+            <div className="flex flex-wrap items-end gap-x-8 gap-y-3">
+              <Suspense fallback={<KitchenNavFallback />}>
+                <KitchenNav />
+              </Suspense>
+              <Suspense fallback={<span className="text-sm text-ink-soft">Opening the kitchen…</span>}>
+                <SessionLinks />
+              </Suspense>
+            </div>
           </div>
           <p className="mt-3 font-display text-[0.68rem] uppercase tracking-[0.22em] text-ink-soft">
             Maya’s kitchen

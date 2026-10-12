@@ -17,7 +17,7 @@ export function SettingsView() {
       <p className="font-display text-[0.68rem] uppercase tracking-[0.22em] text-paprika">Settings</p>
       <h1 className="mt-3 font-display text-5xl leading-none sm:text-6xl">The kitchen settings.</h1>
       <p className="mt-4 text-lg text-ink-soft">
-        Nothing here leaves this browser. Google is a mark on the page, not a real connection.
+        The recipe cards are saved. Google is still only a mark on this page.
       </p>
 
       <section className="mt-10 border border-ink/10 bg-foam p-6">
@@ -96,13 +96,12 @@ export function SettingsView() {
       {pending === "reset" ? (
         <ConfirmDialog
           title="Put Grandma’s cards back?"
-          body="The box returns to the three original cards. The kitchen chat and the Google mark are cleared."
+          body="The box returns to the three original cards, and the Google mark is cleared."
           confirmLabel="Restore the box"
           cancelLabel="Leave it"
           onCancel={() => setPending(null)}
           onConfirm={() => {
-            resetBox();
-            setPending(null);
+            void resetBox().then(() => setPending(null));
           }}
         />
       ) : null}

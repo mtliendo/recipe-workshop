@@ -3,12 +3,25 @@
 import Link from "next/link";
 import { ButtonLink } from "@/components/button";
 import { Plate } from "@/components/plate";
+import { OpeningCard } from "@/components/status";
 import { FEATURED_RECIPE_ID } from "@/lib/recipes";
 import { useBox } from "@/lib/store";
 
 export function HomeView() {
-  const { recipes } = useBox();
+  const { recipes, ready, error } = useBox();
   const featured = recipes.find((recipe) => recipe.id === FEATURED_RECIPE_ID) ?? recipes[0];
+
+  if (!ready) return <OpeningCard />;
+
+  if (error) {
+    return (
+      <section className="max-w-xl">
+        <p className="font-display text-[0.68rem] uppercase tracking-[0.22em] text-paprika">The family box</p>
+        <h1 className="mt-3 font-display text-6xl leading-none">The box didn’t open.</h1>
+        <p className="mt-4 text-lg text-ink-soft">{error}</p>
+      </section>
+    );
+  }
   const rest = featured ? recipes.filter((recipe) => recipe.id !== featured.id) : [];
 
   if (!featured) {
