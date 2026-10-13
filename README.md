@@ -89,8 +89,15 @@ Auth0 does not accept `*.vercel.app` wildcards. Add each origin exactly on the R
 
 **This pull request’s branch alias** (add so sign-in can be checked)
 
-- Callback: `https://sunday-box-git-cursor-preview-dev-envs-5b96-focus-otters-projects.vercel.app/auth/callback`
-- Logout + Allowed Web Origins: `https://sunday-box-git-cursor-preview-dev-envs-5b96-focus-otters-projects.vercel.app`
+Vercel truncates long git branch names in the alias. The live host is `…-preview-dev-0eca88-…`, not the untruncated `…-preview-dev-envs-5b96-…`.
+
+- Callback: `https://sunday-box-git-cursor-preview-dev-0eca88-focus-otters-projects.vercel.app/auth/callback`
+- Logout + Allowed Web Origins: `https://sunday-box-git-cursor-preview-dev-0eca88-focus-otters-projects.vercel.app`
+
+**This deploy’s unique host** (optional if the branch alias is registered)
+
+- Callback: `https://sunday-bbesv00gv-focus-otters-projects.vercel.app/auth/callback`
+- Logout + Allowed Web Origins: `https://sunday-bbesv00gv-focus-otters-projects.vercel.app`
 
 After each new feature branch, add that branch’s `VERCEL_BRANCH_URL` the same way. Unique deploy hosts (`sunday-<id>-focus-otters-projects.vercel.app`) work only if you add them too; prefer the branch alias.
 
