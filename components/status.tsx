@@ -39,7 +39,7 @@ export function MissingCard() {
       <h1 className="mt-3 font-display text-5xl leading-none">This card isn’t in the box.</h1>
       <p className="mt-4 text-ink-soft">It may have been taken out, or the address is wrong.</p>
       <div className="mt-6">
-        <ButtonLink href="/" tone="quiet">
+        <ButtonLink href="/box" tone="quiet">
           Back to the box
         </ButtonLink>
       </div>

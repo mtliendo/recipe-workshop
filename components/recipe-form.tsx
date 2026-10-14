@@ -305,7 +305,7 @@ export function RecipeForm({
                 setConfirmingDelete(false);
                 return;
               }
-              router.push("/");
+              router.push("/box");
             });
           }}
         />

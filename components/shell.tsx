@@ -15,11 +15,17 @@ export function Shell({ children }: { children: ReactNode }) {
       <div className="mx-auto flex min-h-full w-full max-w-6xl flex-col px-5 pb-20 pt-6 sm:px-8">
         <header className="border-b-4 border-double border-ink pb-4">
           <div className="flex flex-wrap items-end justify-between gap-x-8 gap-y-4">
-            <Link href="/" className="leading-none">
+            <Link href="/box" className="leading-none">
               <span className="font-display text-4xl italic tracking-tight">Sunday</span>
               <span className="ml-2 font-display text-xs uppercase tracking-[0.32em]">Box</span>
             </Link>
             <div className="flex flex-wrap items-end gap-x-8 gap-y-3">
+              <Link
+                href="/"
+                className="font-display text-[0.68rem] uppercase tracking-[0.22em] text-ink-soft hover:text-ink"
+              >
+                Workshop
+              </Link>
               <Suspense fallback={<KitchenNavFallback />}>
                 <KitchenNav />
               </Suspense>
