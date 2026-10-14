@@ -7,13 +7,13 @@ export async function SessionLinks() {
     return (
       <span className="flex items-center gap-4">
         <a
-          href="/auth/login?screen_hint=signup"
+          href="/auth/login?returnTo=/box&screen_hint=signup"
           className="font-display text-[0.68rem] uppercase tracking-[0.22em] text-ink-soft hover:text-ink"
         >
           Sign up
         </a>
         <a
-          href="/auth/login"
+          href="/auth/login?returnTo=/box"
           className="font-display text-[0.68rem] uppercase tracking-[0.22em] text-paprika"
         >
           Sign in
@@ -27,7 +27,7 @@ export async function SessionLinks() {
   return (
     <span className="flex items-center gap-4 text-sm">
       <span className="text-ink-soft">{label}</span>
-      <a href="/auth/logout" className="font-display text-[0.68rem] uppercase tracking-[0.22em]">
+      <a href="/auth/logout?returnTo=/" className="font-display text-[0.68rem] uppercase tracking-[0.22em]">
         Sign out
       </a>
     </span>

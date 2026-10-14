@@ -2,14 +2,29 @@
 
 Live: [https://sunday-box.vercel.app](https://sunday-box.vercel.app)
 
-Maya’s family recipe box. Cloning the repo is the start. This checkpoint is the setup: Auth0, Neon, Vercel Blob, and the AI Gateway, checked on the web.
+Workshop app for **Your First Product: Building for Humans and Agents**. `/` is the public workshop page. The recipe box lives at `/box` and stays behind login.
+
+Maya’s family recipe box. Cloning the repo is the start. Auth0, Neon, Vercel Blob, and the AI Gateway are checked on the web.
+
+## Workshop
+
+| Module | Title (from this repo) | Status |
+|---|---|---|
+| 0 | Land the Sunday Box shell as the starting point | Done |
+| 1 | Each recipe belongs to the signed-in user | Done |
+| 2 | Setup the live kitchen | Done |
+| 3 | Token Vault + Google Calendar | Next — Settings is only a mark |
+| 4–7 | Upcoming | Not named in this repo yet |
 
 ## What is working
 
-The box starts empty. **Sign up** and **Sign in** in the header go through Auth0, and **Sign out** ends the session. Each recipe is stored with that person’s Auth0 id, and the box only returns their cards.
+Signed out, `/` shows the workshop: the Maya story, the module list, the stack, and a **Sign in / Get started** link to `/auth/login?returnTo=/box`. Signed-in visitors see **Go to your box**.
+
+`/box` is the family box. **Sign up** and **Sign in** go through Auth0 and return to `/box`. **Sign out** ends the session. Each recipe is stored with that person’s Auth0 id, and the box only returns their cards.
 
 These stay behind login:
 
+- `/box` — the cards
 - Write a card, and revise or remove one
 - Save a picture to Vercel Blob, or **Photograph it** with the AI Gateway
 - The kitchen chat
@@ -25,7 +40,7 @@ cp .env.example .env
 pnpm dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000). The names in `.env.example` are the ones the app reads. Auth0’s Next.js SDK also reads `.env.local`, and that file wins over `.env` when both exist. Keep real values out of git.
+Open [http://localhost:3000](http://localhost:3000) for the workshop page, or [http://localhost:3000/box](http://localhost:3000/box) for the app. The names in `.env.example` are the ones the app reads. Auth0’s Next.js SDK also reads `.env.local`, and that file wins over `.env` when both exist. Keep real values out of git.
 
 ### Auth0
 
@@ -82,13 +97,6 @@ Auth0 does not accept `*.vercel.app` wildcards. Add each origin exactly on the R
 - Callback: `https://sunday-box.vercel.app/auth/callback`
 - Logout + Allowed Web Origins: `https://sunday-box.vercel.app`
 
-**This pull request’s branch alias** (add so sign-in can be checked)
-
-Vercel truncates long git branch names in the alias.
-
-- Callback: `https://sunday-box-git-cursor-fix-prod-bui-aefcc5-focus-otters-projects.vercel.app/auth/callback`
-- Logout + Allowed Web Origins: `https://sunday-box-git-cursor-fix-prod-bui-aefcc5-focus-otters-projects.vercel.app`
-
 After each new feature branch, add that branch’s `VERCEL_BRANCH_URL` the same way. Unique deploy hosts (`sunday-<id>-focus-otters-projects.vercel.app`) work only if you add them too; prefer the branch alias.
 
 ### What ships where
@@ -100,9 +108,9 @@ After each new feature branch, add that branch’s `VERCEL_BRANCH_URL` the same 
 
 With the dev server running, or on the deployed URL:
 
-1. Signed out, the homepage asks you to sign in. The brisket, cornbread, and cobbler cards are gone.
-2. Sign up or sign in. The box is empty until you write a card.
-3. Write a card. It shows on the homepage for this sign-in.
-4. Sign out. The card leaves the page. Sign in again and it is back.
+1. Signed out, `/` is the workshop page. `/box` sends you to sign in.
+2. Sign up or sign in. You land on `/box`. The box is empty until you write a card.
+3. Write a card. It shows on `/box` for this sign-in.
+4. Sign out. `/box` asks you to sign in again. Sign in and the card is back.
 5. Open the kitchen and send a note. It should answer.
 6. On a card, use **Photograph it**, or choose a picture. The plate should keep that photo.

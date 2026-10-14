@@ -33,7 +33,7 @@ export function HomeView({
   if (!signedIn) {
     return (
       <SignInPrompt
-        returnTo="/"
+        returnTo="/box"
         title="Your cards stay with you."
         body="Sign in to open the box. The cards you write belong to this sign-in."
       />

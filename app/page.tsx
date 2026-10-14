@@ -1,19 +1,13 @@
-import { Suspense } from "react";
-import { HomeView } from "@/components/home-view";
-import { OpeningCard } from "@/components/status";
-import { listRecipes } from "@/lib/recipes-db";
-import { currentOwner } from "@/lib/session";
+import type { Metadata } from "next";
+import { WorkshopHome } from "@/components/workshop-home";
+import { WORKSHOP_TITLE } from "@/lib/workshop";
 
-export default function Home() {
-  return (
-    <Suspense fallback={<OpeningCard />}>
-      <Box />
-    </Suspense>
-  );
-}
+export const metadata: Metadata = {
+  title: WORKSHOP_TITLE,
+  description:
+    "A hands-on workshop. Build Sunday Box — Maya’s family recipe box — for humans, then for agents.",
+};
 
-async function Box() {
-  const owner = await currentOwner();
-  const recipes = owner ? await listRecipes(owner) : [];
-  return <HomeView initialRecipes={recipes} initialSignedIn={Boolean(owner)} />;
+export default function WorkshopPage() {
+  return <WorkshopHome />;
 }

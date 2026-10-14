@@ -88,7 +88,7 @@ export function RecipeDetail({ initialRecipe, index }: { initialRecipe: Recipe; 
             Take it out
           </Button>
           <Link
-            href="/"
+            href="/box"
             className="inline-flex items-center px-2 text-sm text-ink-soft underline decoration-ink/20 underline-offset-4"
           >
             Back to the box
@@ -110,7 +110,7 @@ export function RecipeDetail({ initialRecipe, index }: { initialRecipe: Recipe; 
                 setConfirmingDelete(false);
                 return;
               }
-              router.push("/");
+              router.push("/box");
             });
           }}
         />

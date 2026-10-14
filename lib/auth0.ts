@@ -3,4 +3,7 @@ import { resolveAppBaseUrl } from "@/lib/app-base-url";
 
 const appBaseUrl = resolveAppBaseUrl();
 
-export const auth0 = new Auth0Client(appBaseUrl ? { appBaseUrl } : {});
+export const auth0 = new Auth0Client({
+  ...(appBaseUrl ? { appBaseUrl } : {}),
+  signInReturnToPath: "/box",
+});
