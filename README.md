@@ -1,5 +1,7 @@
 # Sunday Box
 
+Live: [https://sunday-box.vercel.app](https://sunday-box.vercel.app)
+
 Maya’s family recipe box. Cloning the repo is the start. This checkpoint is the setup: Auth0, Neon, Vercel Blob, and the AI Gateway, checked on the web.
 
 ## What is working
