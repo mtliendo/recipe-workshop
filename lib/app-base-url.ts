@@ -5,16 +5,14 @@ function originFromHost(host: string | undefined) {
 
 /**
  * Production and local `pnpm dev` keep a fixed APP_BASE_URL.
- * Preview (and a custom `dev` environment, if created) must accept Vercel’s
- * changing hosts, so we allow the branch alias and the unique deploy URL.
- * The Auth0 SDK then picks the host from the incoming request.
+ * Preview must accept Vercel’s changing hosts, so we allow the
+ * branch alias and the unique deploy URL. The Auth0 SDK then
+ * picks the host from the incoming request.
  */
 export function resolveAppBaseUrl(): string | string[] | undefined {
   const vercelEnv = process.env.VERCEL_ENV;
-  const targetEnv = process.env.VERCEL_TARGET_ENV;
 
-  const isFixedOrigin = vercelEnv === "production" || vercelEnv === "development" || !vercelEnv;
-  if (isFixedOrigin && targetEnv !== "dev") {
+  if (vercelEnv === "production" || vercelEnv === "development" || !vercelEnv) {
     return process.env.APP_BASE_URL || undefined;
   }
 

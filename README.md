@@ -53,23 +53,21 @@ Set the same variables on the Vercel project before you deploy.
 
 ## Deploys
 
-The Vercel project is **sunday-box** (team **Focus Otter's projects**, Pro). The intended flow is **dev → preview → production**. Do not promote a commit straight to production.
+The Vercel project is **sunday-box** (team **Focus Otter's projects**, Pro). **Dev** here means local: `pnpm dev` with Development env vars (`vercel env pull`). There is no custom Vercel `dev` environment. The flow is **local → Preview → promote to Production**. Do not promote a commit straight to production.
 
 | Environment | What it is | `APP_BASE_URL` | Database |
 |---|---|---|---|
-| **Development** | Local (`pnpm dev` / `vercel env pull`) | `http://localhost:3000` | Neon branch **`preview`** |
+| **Development** (local) | `pnpm dev` with Development env vars | `http://localhost:3000` | Neon branch **`preview`** |
 | **Preview** | Every git branch and pull request | Omit it. The app allows `VERCEL_BRANCH_URL` and `VERCEL_URL`, and Auth0 infers the request host. | Neon branch **`preview`** |
-| **dev** (custom) | Not created yet. Pro allows **one** custom environment. | The environment’s alias URL, once created | Neon branch **`preview`** |
 | **Production** | [https://sunday-box.vercel.app](https://sunday-box.vercel.app) after a verified preview is promoted | `https://sunday-box.vercel.app` | Neon branch **`main`** |
 
 ### What is already set on Vercel
 
 - Preview and Development now have Auth0 (`AUTH0_DOMAIN`, `AUTH0_CLIENT_ID`, `AUTH0_CLIENT_SECRET`, `AUTH0_SECRET`), the AI Gateway model ids, `AI_GATEWAY_API_KEY`, and `BLOB_READ_WRITE_TOKEN`.
 - Preview and Development `DATABASE_URL` points at the Neon **`preview`** branch on project `sunday-box`. Production still uses Neon `main`.
-- **Auto-assign Custom Production Domains is off.** A push to `main` can still *create* a Production-target deployment, but it will not take `sunday-box.vercel.app`. Promote a verified Preview (Deployments → ⋯ → Promote) when you want production. That is the Pro-plan control; there is no separate “never build production from git” switch on this plan without a custom environment + branch policy.
-- A custom **`dev`** environment was **not** created from here (the API for that is dashboard-only in this setup). Create it in the project: Settings → Environments → Create Environment. Slug `dev`, branch matcher **equals** `dev`, copy variables from Preview. Then push a git branch named `dev` for the stable alias `https://sunday-box-git-dev-focus-otters-projects.vercel.app`.
+- **Auto-assign Custom Production Domains is off.** A push to `main` can still *create* a Production-target deployment, but it will not take `sunday-box.vercel.app`. Promote a verified Preview (Deployments → ⋯ → Promote) when you want production.
 
-Until that custom environment exists, use **Development + Preview**. Pushes to any branch other than `main` (including this PR) deploy to Preview.
+Pushes to any branch other than `main` (including this PR) deploy to Preview.
 
 ### Auth0 URLs
 
@@ -81,11 +79,6 @@ Auth0 does not accept `*.vercel.app` wildcards. Add each origin exactly on the R
 - Logout + Allowed Web Origins: `http://localhost:3000`
 - Callback: `https://sunday-box.vercel.app/auth/callback`
 - Logout + Allowed Web Origins: `https://sunday-box.vercel.app`
-
-**Stable preview / future `dev` branch alias** (add once)
-
-- Callback: `https://sunday-box-git-dev-focus-otters-projects.vercel.app/auth/callback`
-- Logout + Allowed Web Origins: `https://sunday-box-git-dev-focus-otters-projects.vercel.app`
 
 **This pull request’s branch alias** (add so sign-in can be checked)
 
