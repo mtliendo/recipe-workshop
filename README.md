@@ -35,7 +35,7 @@ Create a Regular Web Application for Next.js.
 
 Put `APP_BASE_URL`, `AUTH0_DOMAIN`, `AUTH0_CLIENT_ID`, `AUTH0_CLIENT_SECRET`, and `AUTH0_SECRET` in `.env.local`. Generate the secret with `openssl rand -hex 32`.
 
-When the app is deployed, add that origin’s `/auth/callback` and logout URL as well. Production sets `APP_BASE_URL`. Preview leaves it unset — see Deploys.
+When the app is deployed, add that origin’s `/auth/callback` and logout URL as well. Production sets `APP_BASE_URL` (a single origin, or comma-separated origins — the app splits them). Preview leaves it unset — see Deploys.
 
 ### Neon
 
@@ -53,19 +53,19 @@ Set the same variables on the Vercel project before you deploy.
 
 ## Deploys
 
-The Vercel project is **sunday-box** (team **Focus Otter's projects**, Pro). **Dev** here means local: `pnpm dev` with Development env vars (`vercel env pull`). There is no custom Vercel `dev` environment. The flow is **local → Preview → promote to Production**. Do not promote a commit straight to production.
+The Vercel project is **sunday-box** (team **Focus Otter's projects**, Pro). **Dev** here means local: `pnpm dev` with Development env vars (`vercel env pull`). There is no custom Vercel `dev` environment. The flow is **local → Preview → merge to `main`**. A merge to `main` deploys production. Auto-assign custom domains is on, so that production deployment takes [https://sunday-box.vercel.app](https://sunday-box.vercel.app). No manual promote.
 
 | Environment | What it is | `APP_BASE_URL` | Database |
 |---|---|---|---|
 | **Development** (local) | `pnpm dev` with Development env vars | `http://localhost:3000` | Neon branch **`preview`** |
 | **Preview** | Every git branch and pull request | Omit it. The app allows `VERCEL_BRANCH_URL` and `VERCEL_URL`, and Auth0 infers the request host. | Neon branch **`preview`** |
-| **Production** | [https://sunday-box.vercel.app](https://sunday-box.vercel.app) after a verified preview is promoted | `https://sunday-box.vercel.app` | Neon branch **`main`** |
+| **Production** | [https://sunday-box.vercel.app](https://sunday-box.vercel.app) after merge to `main` | `https://sunday-box.vercel.app` (comma-separated extra origins are split) | Neon branch **`main`** |
 
 ### What is already set on Vercel
 
 - Preview and Development now have Auth0 (`AUTH0_DOMAIN`, `AUTH0_CLIENT_ID`, `AUTH0_CLIENT_SECRET`, `AUTH0_SECRET`), the AI Gateway model ids, `AI_GATEWAY_API_KEY`, and `BLOB_READ_WRITE_TOKEN`.
 - Preview and Development `DATABASE_URL` points at the Neon **`preview`** branch on project `sunday-box`. Production still uses Neon `main`.
-- **Auto-assign Custom Production Domains is off.** A push to `main` can still *create* a Production-target deployment, but it will not take `sunday-box.vercel.app`. Promote a verified Preview (Deployments → ⋯ → Promote) when you want production.
+- **Auto-assign Custom Production Domains is on.** Merge to `main` ships.
 
 Pushes to any branch other than `main` (including this PR) deploy to Preview.
 
@@ -82,22 +82,17 @@ Auth0 does not accept `*.vercel.app` wildcards. Add each origin exactly on the R
 
 **This pull request’s branch alias** (add so sign-in can be checked)
 
-Vercel truncates long git branch names in the alias. The live host is `…-preview-dev-0eca88-…`, not the untruncated `…-preview-dev-envs-5b96-…`.
+Vercel truncates long git branch names in the alias.
 
-- Callback: `https://sunday-box-git-cursor-preview-dev-0eca88-focus-otters-projects.vercel.app/auth/callback`
-- Logout + Allowed Web Origins: `https://sunday-box-git-cursor-preview-dev-0eca88-focus-otters-projects.vercel.app`
-
-**This deploy’s unique host** (optional if the branch alias is registered)
-
-- Callback: `https://sunday-bbesv00gv-focus-otters-projects.vercel.app/auth/callback`
-- Logout + Allowed Web Origins: `https://sunday-bbesv00gv-focus-otters-projects.vercel.app`
+- Callback: `https://sunday-box-git-cursor-fix-prod-bui-aefcc5-focus-otters-projects.vercel.app/auth/callback`
+- Logout + Allowed Web Origins: `https://sunday-box-git-cursor-fix-prod-bui-aefcc5-focus-otters-projects.vercel.app`
 
 After each new feature branch, add that branch’s `VERCEL_BRANCH_URL` the same way. Unique deploy hosts (`sunday-<id>-focus-otters-projects.vercel.app`) work only if you add them too; prefer the branch alias.
 
 ### What ships where
 
 - Push a branch or open a PR → Preview. Check sign-in there.
-- Merge to `main` does not take the production domain while auto-assign is off. Promote a verified preview in the Vercel dashboard when you want production.
+- Merge to `main` → production deploys and takes `sunday-box.vercel.app`.
 
 ## Check
 
